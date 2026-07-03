@@ -1,0 +1,24 @@
+{
+  "name": "@openleash/plugin-token-saver",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "@openleash/shared": "^0.1.0"
+  },
+  "devDependencies": {
+    "@openleash/shared": "^0.1.0",
+    "typescript": "^5.8.3"
+  }
+}
