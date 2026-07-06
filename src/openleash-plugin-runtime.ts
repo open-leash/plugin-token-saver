@@ -121,7 +121,7 @@ export function eventForHookEvent(eventName: EvaluationRequest["event"]["eventNa
   if (eventName === "PreToolUse") return "tool.beforeUse";
   if (eventName === "PostToolUse") return "tool.afterUse";
   if (eventName === "UserPromptSubmit") return "prompt.beforeSubmit";
-  if (eventName === "Stop") return "response.afterReceive";
+  if (eventName === "Stop") return "agent.response";
   return "agent.detected";
 }
 
