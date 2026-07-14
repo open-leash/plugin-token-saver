@@ -1,22 +1,25 @@
 # plugin-token-saver
 
-First-party OpenLeash plugin that reduces prompt token usage before model calls.
+Token Saver is OpenLeash's first container plugin. It embeds Headroom as a compression engine; Headroom never receives provider credentials and never acts as the network proxy. OpenLeash `local-proxy` owns provider transport, `client-api` owns plugin ordering and policy, and this container receives signed requests and returns constrained JSON patches.
 
-This is a first-party OpenLeash plugin repository. The plugin owns its domain logic, prompts, schemas, parsing, and local fallbacks. OpenLeash provides only primitive runtime capabilities such as evaluator LLM calls, plugin-scoped storage, signals, logs, usage records, notifications, and selected host context.
+The versioned response can also request host-mediated `logs`, `usage`, and `signals`. `client-api` checks the installed manifest and effective account setting, enforces each declared permission, sanitizes the payload, and writes through the normal OpenLeash capability implementation. The container never receives Postgres, cloud, provider, or OpenLeash credentials. Stateful CCR content remains in the plugin-scoped `/data` volume and is exposed only through the correlated signed tool API.
 
-## Source
+## Runtime
 
-- `src/manifest.ts` declares events, permissions, settings, ordering, and metadata.
-- `src/index.ts` implements the plugin.
-- `src/openleash-plugin-runtime.ts` contains tiny local helper types used by this standalone repo.
+- `GET /healthz`
+- `POST /v1/transform` using `openleash-container-plugin.v1`
+- `POST /v1/tools/execute` for tenant/session-scoped CCR retrieval
 
-## Development
+The desktop starts the image when the effective account state enables Token Saver. It runs non-root with a read-only root filesystem, dropped capabilities, bounded resources, loopback-only exposure, and a plugin-scoped `/data` volume. OpenLeash Cloud runs the same image as a warm shared first-party worker pool; tenant-dedicated placement remains available for higher-isolation deployments.
+
+## Build
 
 ```bash
 npm install
 npm run typecheck
+docker build -t ghcr.io/open-leash/token-saver:1.1.0 .
+docker run --rm -p 127.0.0.1:9331:8080 ghcr.io/open-leash/token-saver:1.1.0
+curl http://127.0.0.1:9331/healthz
 ```
 
-## Runtime
-
-OpenLeash loads reviewed plugins by manifest metadata and executes their handlers inside the managed plugin runtime.
+Production releases must record and deploy the registry digest rather than relying on the human-readable tag.
