@@ -17,8 +17,8 @@ The desktop starts the image when the effective account state enables Token Save
 ```bash
 npm install
 npm run typecheck
-docker build -t ghcr.io/open-leash/token-saver:1.1.0 .
-docker run --rm -p 127.0.0.1:9331:8080 ghcr.io/open-leash/token-saver:1.1.0
+docker build -t ghcr.io/open-leash/plugin-token-saver:1.1.1 .
+docker run --rm -p 127.0.0.1:9331:8080 ghcr.io/open-leash/plugin-token-saver:1.1.1
 curl http://127.0.0.1:9331/healthz
 ```
 
