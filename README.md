@@ -12,6 +12,12 @@ The versioned response can also request host-mediated `logs`, `usage`, and `sign
 
 The desktop starts the image when the effective account state enables Token Saver. It runs non-root with a read-only root filesystem, dropped capabilities, bounded resources, loopback-only exposure, and a plugin-scoped `/data` volume. OpenLeash Cloud runs the same image as a warm shared first-party worker pool; tenant-dedicated placement remains available for higher-isolation deployments.
 
+## Configuration scope
+
+Token Saver receives one resolved configuration in each signed request. OpenLeash merges manifest defaults, organization settings and matching organization agent profiles, then permitted user/global and per-agent profiles. Exact agent identity is derived from authenticated enrollment/runtime context. The container must treat configuration as request-scoped data and may cache only by configuration hash; it must not retain tenant configuration as global mutable state.
+
+Organization admins independently control mandatory installation, default enablement, employee install freedom, and configuration locking. A mandatory Token Saver installation may remain employee-configurable. The same container contract runs beside Individual Open Source and desktop edge installations and in OpenLeash Cloud warm pools; product-mode and role logic remain in OpenLeash.
+
 ## Build
 
 ```bash
