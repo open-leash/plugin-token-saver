@@ -353,7 +353,7 @@ def _response(
                     else "Checked the latest model request; no safe compression opportunity was found."
                 ),
                 "tone": "success" if saved_percent > 0 else "neutral",
-                "ttlSeconds": 300,
+                "ttlSeconds": 3600,
                 "action": {
                     "id": "open-token-saver",
                     "label": "Token saver settings",
