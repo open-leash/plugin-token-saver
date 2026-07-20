@@ -304,6 +304,7 @@ def _response(
     tokens_before = int(metrics.get("tokensBefore", 0) or 0)
     tokens_after = int(metrics.get("tokensAfter", 0) or 0)
     tokens_saved = int(metrics.get("tokensSaved", 0) or 0)
+    saved_percent = max(0, round(tokens_saved / tokens_before * 100)) if tokens_before > 0 else 0
     return {
         "protocol": PROTOCOL,
         "requestId": envelope.get("requestId"),
@@ -339,6 +340,24 @@ def _response(
                     "compressionEngine": "headroom",
                     "status": status,
                     "strategies": metrics.get("strategies", ""),
+                },
+            }],
+            "island": [{
+                "kind": "annotation",
+                "key": "token-savings",
+                "label": "Token saver",
+                "value": f"{saved_percent}% saved",
+                "detail": (
+                    f"Reduced the latest model request from {tokens_before} to {tokens_after} estimated tokens."
+                    if saved_percent > 0
+                    else "Checked the latest model request; no safe compression opportunity was found."
+                ),
+                "tone": "success" if saved_percent > 0 else "neutral",
+                "ttlSeconds": 300,
+                "action": {
+                    "id": "open-token-saver",
+                    "label": "Token saver settings",
+                    "type": "open-plugin-settings",
                 },
             }],
         },
