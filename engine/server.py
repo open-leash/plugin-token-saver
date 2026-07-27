@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -21,7 +22,7 @@ DB_PATH = DATA_DIR / "ccr.sqlite3"
 SECRET = os.environ.get("OPENLEASH_PLUGIN_RUNTIME_SECRET", "")
 MAX_CLOCK_SKEW_MS = 5 * 60 * 1000
 
-app = FastAPI(title="OpenLeash Token Saver", docs_url=None, redoc_url=None)
+app = FastAPI(title="OpenLeash token-saver", docs_url=None, redoc_url=None)
 _compressor_lock = threading.RLock()
 _compressors: dict[str, ContentRouter] = {}
 
@@ -171,11 +172,31 @@ async def transform(request: Request) -> dict[str, Any]:
     return _response(envelope, status, patches, metrics, hashes)
 
 
+@app.post("/v1/events")
+async def event(request: Request) -> dict[str, Any]:
+    """token-saver transforms provider-bound payloads; hook-only events are observational."""
+    envelope = await _verified_json(request)
+    return {
+        "protocol": PROTOCOL,
+        "requestId": envelope.get("requestId"),
+        "status": "completed",
+        "output": {
+            "model": "none",
+            "runs": [{
+                "pluginId": PLUGIN_ID,
+                "event": str(envelope.get("event", "prompt.beforeSubmit")),
+                "status": "skipped",
+                "summary": "token-saver runs on provider-bound requests where prompt replacement is available.",
+            }],
+        },
+    }
+
+
 @app.post("/v1/tools/execute")
 async def execute_tool(request: Request) -> dict[str, Any]:
     envelope = await _verified_json(request)
     if envelope.get("tool") not in {"headroom_retrieve", "retrieve"}:
-        raise HTTPException(400, "unsupported Token Saver tool")
+        raise HTTPException(400, "unsupported token-saver tool")
     arguments = envelope.get("arguments") if isinstance(envelope.get("arguments"), dict) else {}
     content_hash = str(arguments.get("hash", ""))
     tenant_id = str(envelope.get("tenant", {}).get("organizationId", ""))
@@ -277,6 +298,10 @@ def _compress_text(
         bias = {"light": 1.35, "standard": 1.0, "maximum": 0.75}.get(level, 1.0)
         result = _compressor(level).compress(value, bias=bias)
     compressed = result.compressed
+    if level == "maximum" and (
+        not compressed or len(compressed) >= len(value) * 0.98
+    ):
+        compressed = _collapse_exact_repetition(value)
     if not compressed or len(compressed) >= len(value) * 0.98:
         return value
     strategies.append(result.strategy_used.value)
@@ -294,7 +319,21 @@ def _compress_text(
             (tenant_id, session_id, content_hash, value, expires_at, int(time.time())),
         )
     hashes.append(content_hash)
-    return f"{compressed}\n\n[OpenLeash CCR:{content_hash}; original available through Token Saver retrieval]"
+    return f"{compressed}\n\n[OpenLeash CCR:{content_hash}; original available through token-saver retrieval]"
+
+
+def _collapse_exact_repetition(value: str) -> str:
+    """Compact long consecutive sentence repeats without discarding their meaning."""
+    pattern = re.compile(
+        r"(?P<unit>[^.!?\n]{24,}?[.!?])(?:\s+(?P=unit)){2,}"
+    )
+
+    def replace(match: re.Match[str]) -> str:
+        unit = match.group("unit")
+        repeats = match.group(0).count(unit)
+        return f"{unit} [Repeated {repeats} times.]"
+
+    return pattern.sub(replace, value)
 
 
 def _response(
@@ -345,7 +384,7 @@ def _response(
             "island": [{
                 "kind": "annotation",
                 "key": "token-savings",
-                "label": "Token saver",
+                "label": "token-saver",
                 "value": f"{saved_percent}% saved",
                 "detail": (
                     f"Reduced the latest model request from {tokens_before} to {tokens_after} estimated tokens."
@@ -356,7 +395,7 @@ def _response(
                 "ttlSeconds": 3600,
                 "action": {
                     "id": "open-token-saver",
-                    "label": "Token saver settings",
+                    "label": "token-saver settings",
                     "type": "open-plugin-settings",
                 },
             }],

@@ -28,7 +28,7 @@ export async function runPromptCompression({
         pluginId: manifest.id,
         event: "prompt.beforeSubmit",
         status: "skipped",
-        summary: "Token saver is disabled.",
+        summary: "token-saver is disabled.",
         startedAt
       })
     };
@@ -84,14 +84,14 @@ export async function runPromptCompression({
   const savedPercent = prompt.length > 0 ? Math.max(0, Math.round((1 - finalPrompt.length / prompt.length) * 100)) : 0;
   await capabilities.island.annotateSession({
     key: "token-savings",
-    label: "Token saver",
+    label: "token-saver",
     value: `${savedPercent}% saved`,
     detail: savedPercent > 0
       ? `Reduced the latest prompt from ${prompt.length} to ${finalPrompt.length} characters.`
       : "Checked the latest prompt; shortening it would not preserve enough useful context.",
     tone: savedPercent > 0 ? "success" : "neutral",
     ttlSeconds: 3_600,
-    action: { id: "open-token-saver", label: "Token saver settings", type: "open-plugin-settings" }
+    action: { id: "open-token-saver", label: "token-saver settings", type: "open-plugin-settings" }
   });
   const summary = compressionSummary(prompt, finalPrompt, compression);
   const result = {
@@ -159,6 +159,6 @@ function compressionSummary(
   finalPrompt: string,
   compression: NonNullable<PromptPipelineResult["compression"]>
 ) {
-  if (finalPrompt === originalPrompt) return "Token saver checked with no changes.";
-  return `Token saver reduced prompt from ${compression.originalLength} to ${compression.compressedLength} chars.`;
+  if (finalPrompt === originalPrompt) return "token-saver checked with no changes.";
+  return `token-saver reduced prompt from ${compression.originalLength} to ${compression.compressedLength} chars.`;
 }

@@ -15,6 +15,7 @@ export const promptCompressionManifest: OpenLeashPluginManifest = {
     image: "ghcr.io/open-leash/plugin-token-saver:1.1.3",
       digest: "sha256:a4b393aaea6867516c800e0c8381e03a451750a497d76870725dc8d3eaf1ffd3",
     healthPath: "/healthz",
+    eventPath: "/v1/events",
     transformPath: "/v1/transform",
     toolExecutePath: "/v1/tools/execute",
     edgePort: 9331,
@@ -25,8 +26,8 @@ export const promptCompressionManifest: OpenLeashPluginManifest = {
     storage: { persistent: true, volumeName: "openleash-token-saver-data" }
   },
   entrypoint: "container",
-  events: ["provider.request.beforeSend", "plugin.tool.execute", "prompt.beforeSubmit"],
-  permissions: ["event:read", "prompt:read", "prompt:write", "provider-request:read", "provider-request:write", "local-model:run", "storage:read", "storage:write", "audit:write", "log:write", "usage:write", "island:publish"],
+  events: ["provider.request.beforeSend", "plugin.tool.execute"],
+  permissions: ["event:read", "prompt:read", "prompt:write", "provider-request:read", "provider-request:write", "local-model:run", "audit:write", "log:write", "usage:write", "island:publish"],
   effects: ["transform", "observe"],
   ordering: {
     priority: 100,
